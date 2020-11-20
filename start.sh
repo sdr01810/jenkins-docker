@@ -94,12 +94,12 @@ then
 	echo
 	echo "Launching a shell..."
 	xx :
-	xx exec bash -l
+	xx exec bash -i
 else
 	echo
 	echo "Launching Jenkins..."
 	xx :
-	xx exec su -c "exec tini -- /usr/local/bin/jenkins.sh $@" "${jenkins_user_name}"
+	xx exec su -c "exec /usr/bin/env PATH='${PATH}' tini -- jenkins.sh ${@}" "${jenkins_user_name}"
 fi
 
 ##
