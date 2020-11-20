@@ -1,4 +1,4 @@
-FROM jenkins:latest
+FROM jenkins/jenkins:lts
 
 VOLUME ["/var/jenkins_home", "/usr/share/jenkins/ref"]
 #^-- these locations are determined by the base image
