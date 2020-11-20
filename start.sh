@@ -1,8 +1,23 @@
-#!/bin/sh
+#!/usr/bin/env bash
 ## Entry point for the Jenkins container.
 ##
 
-debugging=false
+set -e
+
+xx() {
+	echo "+" "$@"
+	"$@"
+}
+
+xx_eval() {
+	eval "xx" "$@"
+}
+
+printenv_sorted() {
+	xx printenv | xx env LC_ALL=C sort
+}
+
+##
 
 jenkins_user_name="${jenkins_user_name:-jenkins}"
 jenkins_group_name="${jenkins_group_name:-jenkins}"
@@ -15,8 +30,9 @@ jenkins_docker_image_setup_root="${jenkins_docker_image_setup_root:-/var/local/w
 jenkins_docker_image_ssh_key_type="${jenkins_docker_image_ssh_key_type:-rsa}"
 
 ##
+## set ownership & permissions on files managed by jenkins:
+##
 
-# set ownership & permissions on files managed by jenkins:
 for d1 in \
 	"${jenkins_home_root}" \
 	"${jenkins_home_ref_root}" \
@@ -27,14 +43,26 @@ for d1 in \
 	(set -x ; : ; ls -al "$d1")
 done
 
-(set -x ; : ; chmod go-rwx "${jenkins_home_root}"/.ssh)
+for d1 in \
+	"${jenkins_home_root}"/.ssh \
+;do
+	[ -e "$d1" ] || continue
+
+	(set -x ; chmod go-rwx "$d1")
+done
+
 for f1 in \
 	"${jenkins_home_root}"/.ssh/*.pub \
 ;do
+	[ -e "$f1" ] || continue
+
 	(set -x ; chmod a+r "$f1")
 done
 
-# generate an ssh key for user jenkins on demand:
+##
+## generate an ssh key for user jenkins on demand:
+##
+
 for k1 in \
 	"${jenkins_home_root}/.ssh/id_${jenkins_docker_image_ssh_key_type}" \
 ;do
@@ -46,28 +74,32 @@ done
 (set -x ; : ; ls -al "${jenkins_home_root}"/.ssh)
 
 ##
+## print environment variables:
+##
 
 export TINI_SUBREAPER=
 #^-- mere existence indicates 'true'
 
 echo
-echo "==== Environment variables:"
-echo
-printenv | LC_ALL=C sort
-echo
-echo "===="
-echo
+echo "Environment variables:"
+xx :
+printenv_sorted
 
 ##
+## launch:
+##
 
-if ${debugging} ; then
+if [ -t 0 ]
+then
+	echo
 	echo "Launching a shell..."
-	echo
-	exec bash -l
+	xx :
+	xx exec bash -l
 else
-	echo "Launching Jenkins..."
 	echo
-	exec su -c "exec /bin/tini -- /usr/local/bin/jenkins.sh $@" "${jenkins_user_name}"
+	echo "Launching Jenkins..."
+	xx :
+	xx exec su -c "exec tini -- /usr/local/bin/jenkins.sh $@" "${jenkins_user_name}"
 fi
 
 ##
