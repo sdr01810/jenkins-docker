@@ -38,5 +38,10 @@ patchutils
 quilt
 
 ####
+## Network troubleshooting
+##
+net-tools
+
+####
 ## Other
 ##
