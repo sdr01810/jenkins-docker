@@ -9,7 +9,9 @@ image_tag                = ${docker_hub_user}/${container_name}
 
 ##
 
-all :: build push
+all :: build #!#push
+
+clean ::
 
 build ::
 	docker build ${docker_build_args_extra} --tag "${image_tag}" .
