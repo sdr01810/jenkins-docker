@@ -3,6 +3,9 @@
 ##
 bash
 less
+perl
+procps
+sudo
 
 ####
 ## Archive formats
